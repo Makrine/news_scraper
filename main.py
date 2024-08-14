@@ -1,4 +1,4 @@
-from db_handler import fetch_articles
+from db_handler import fetch_articles, insert_sentiment
 from text_processing import clean_text_spacy, get_sentiment
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -15,10 +15,11 @@ def plot_sentiment_distribution(df):
     plt.grid(True)
     plt.tight_layout()
     plt.show()
+    plt.savefig('sentiment_distribution.png')
 
 def main():
     url = 'https://www.bbc.com/'
-    
+
     # Scrape article details from the given URL
     scrape_article_details(url)
 
@@ -32,6 +33,12 @@ def main():
         # Apply sentiment analysis
         df['sentiment'] = df['summary'].apply(get_sentiment)
         
+        # Add sentiment to the database
+        for idx, row in df.iterrows():
+            id = row['id']
+            sentiment = row['sentiment']
+            insert_sentiment(id, sentiment)
+
         # Print the results
         print(df[['summary', 'cleaned_summary_spacy', 'sentiment']].head())
         

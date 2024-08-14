@@ -20,6 +20,24 @@ def get_connection():
     """Establish and return a connection to the PostgreSQL database."""
     return psycopg2.connect(**DB_PARAMS)
 
+# insert sentiment by id
+def insert_sentiment(id, sentiment):
+    """Insert sentiment data into the PostgreSQL table."""
+    query = sql.SQL("""
+        UPDATE articles SET sentiment = %s WHERE id = %s
+    """)
+
+    try:
+        with get_connection() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(query, (sentiment, id))
+                connection.commit()
+                print(f"Sentiment '{sentiment}' inserted successfully for article with ID {id}")
+
+    except psycopg2.Error as error:
+        print(f"Error while inserting data into PostgreSQL: {error}")
+
+
 def insert_article(title, summary, last_updated, tag):
     """Insert article data into the PostgreSQL table if it does not already exist."""
     
