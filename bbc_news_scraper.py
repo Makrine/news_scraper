@@ -49,7 +49,3 @@ def extract_text(article, data_testid, default_text):
     """Helper function to extract text from article based on data-testid attribute."""
     element = article.find(attrs={"data-testid": data_testid})
     return element.get_text(strip=True) if element else default_text
-
-if __name__ == "__main__":
-    url = 'https://www.bbc.com/'
-    scrape_article_details(url)
