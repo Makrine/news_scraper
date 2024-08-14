@@ -21,8 +21,14 @@ def get_connection():
     return psycopg2.connect(**DB_PARAMS)
 
 def insert_article(title, summary, last_updated, tag):
-    """Insert article data into the PostgreSQL table."""
-    query = sql.SQL("""
+    """Insert article data into the PostgreSQL table if it does not already exist."""
+    
+    # Check if the article already exists
+    check_query = sql.SQL("""
+        SELECT COUNT(*) FROM articles WHERE title = %s
+    """)
+    
+    insert_query = sql.SQL("""
         INSERT INTO articles (title, summary, last_updated, tag)
         VALUES (%s, %s, %s, %s)
     """)
@@ -30,9 +36,17 @@ def insert_article(title, summary, last_updated, tag):
     try:
         with get_connection() as connection:
             with connection.cursor() as cursor:
-                cursor.execute(query, (title, summary, last_updated, tag))
-                connection.commit()
-        print(f"Article '{title}' inserted successfully.")
+                # Check if the article already exists
+                cursor.execute(check_query, (title,))
+                exists = cursor.fetchone()[0] > 0
+                
+                if not exists:
+                    # Insert the article if it does not exist
+                    cursor.execute(insert_query, (title, summary, last_updated, tag))
+                    connection.commit()
+                    print(f"Article '{title}' inserted successfully.")
+                else:
+                    print(f"Article '{title}' already exists in the database.")
     
     except psycopg2.Error as error:
         print(f"Error while inserting data into PostgreSQL: {error}")

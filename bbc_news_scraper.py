@@ -32,7 +32,6 @@ def scrape_article_details(url):
 
                     logging.info(f"Article {idx + 1}: Headline: {headline}, Last Updated: {last_updated}, Tag: {tag}, Summary: {summary}")
 
-                    # Insert the extracted data into the database
                     insert_article(headline, summary, last_updated, tag)
 
                 break  # Exit loop if request is successful

@@ -18,9 +18,7 @@ def plot_sentiment_distribution(df):
 
 def main():
     url = 'https://www.bbc.com/'
-
-    # Delete all articles from the database
-    delete_articles()
+    
     # Scrape article details from the given URL
     scrape_article_details(url)
 
