@@ -16,60 +16,54 @@ DB_PARAMS = {
     'password': os.getenv('DB_PASSWORD')
 }
 
+def get_connection():
+    """Establish and return a connection to the PostgreSQL database."""
+    return psycopg2.connect(**DB_PARAMS)
+
 def insert_article(title, summary, last_updated, tag):
     """Insert article data into the PostgreSQL table."""
-    connection = None
-    cursor = None
+    query = sql.SQL("""
+        INSERT INTO articles (title, summary, last_updated, tag)
+        VALUES (%s, %s, %s, %s)
+    """)
+
     try:
-        # Establish a connection to the database
-        connection = psycopg2.connect(**DB_PARAMS)
-        cursor = connection.cursor()
-
-        # Define the SQL INSERT query
-        insert_query = sql.SQL("""
-            INSERT INTO articles (title, summary, last_updated, tag)
-            VALUES (%s, %s, %s, %s)
-        """)
-
-        # Execute the query
-        cursor.execute(insert_query, (title, summary, last_updated, tag))
-
-        # Commit the transaction
-        connection.commit()
-
+        with get_connection() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(query, (title, summary, last_updated, tag))
+                connection.commit()
         print(f"Article '{title}' inserted successfully.")
     
     except psycopg2.Error as error:
         print(f"Error while inserting data into PostgreSQL: {error}")
-    
-    finally:
-        # Close the cursor and connection
-        if cursor:
-            cursor.close()
-        if connection:
-            connection.close()
-
 
 def fetch_articles(query):
     """Fetch articles from the PostgreSQL table and return as a DataFrame."""
     try:
-        # Establish a connection to the database using a context manager
-        with psycopg2.connect(**DB_PARAMS) as connection:
+        with get_connection() as connection:
             with connection.cursor() as cursor:
-                # Execute the query
                 cursor.execute(query)
-                
-                # Fetch all rows from the executed query
                 rows = cursor.fetchall()
-                
-                # Get column names from the cursor description
                 colnames = [desc[0] for desc in cursor.description]
-                
-                # Create a DataFrame from the fetched data
-                df = pd.DataFrame(rows, columns=colnames)
-                
-                return df
+                return pd.DataFrame(rows, columns=colnames)
     
     except psycopg2.Error as error:
         print(f"Error while querying data from PostgreSQL: {error}")
         return None
+    
+def delete_articles():
+    """Delete all articles from the PostgreSQL table."""
+    query = sql.SQL("DELETE FROM articles")
+    
+    try:
+        with get_connection() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+                # reset the auto increment value
+                cursor.execute("ALTER SEQUENCE articles_id_seq RESTART WITH 1")
+                connection.commit()
+
+        print("All articles deleted successfully.")
+    
+    except psycopg2.Error as error:
+        print(f"Error while deleting data from PostgreSQL: {error}")
