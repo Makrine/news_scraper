@@ -15,7 +15,6 @@ def plot_sentiment_distribution(df):
     plt.grid(True)
     plt.tight_layout()
     plt.show()
-    plt.savefig('sentiment_distribution.png')
 
 def main():
     url = 'https://www.bbc.com/'
