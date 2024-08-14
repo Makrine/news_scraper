@@ -2,6 +2,7 @@ import os
 import psycopg2
 from psycopg2 import sql
 from dotenv import load_dotenv
+import pandas as pd
 
 # Load environment variables from .env file
 load_dotenv()
@@ -47,3 +48,28 @@ def insert_article(title, summary, last_updated, tag):
             cursor.close()
         if connection:
             connection.close()
+
+
+def fetch_articles(query):
+    """Fetch articles from the PostgreSQL table and return as a DataFrame."""
+    try:
+        # Establish a connection to the database using a context manager
+        with psycopg2.connect(**DB_PARAMS) as connection:
+            with connection.cursor() as cursor:
+                # Execute the query
+                cursor.execute(query)
+                
+                # Fetch all rows from the executed query
+                rows = cursor.fetchall()
+                
+                # Get column names from the cursor description
+                colnames = [desc[0] for desc in cursor.description]
+                
+                # Create a DataFrame from the fetched data
+                df = pd.DataFrame(rows, columns=colnames)
+                
+                return df
+    
+    except psycopg2.Error as error:
+        print(f"Error while querying data from PostgreSQL: {error}")
+        return None
